@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SparkX Matches & Differs enabled bot: DIGITMATCH / DIGITDIFF -->
+<xml xmlns="http://www.w3.org/1999/xhtml" collection="false">
+<variables>
+<variable type="" id="prediction">prediction</variable>
+<variable type="" id="stake">stake</variable>
+</variables>
+
+<block type="trade" id="cb2cb96fa38c6f88d1a9" x="0" y="0">
+<statement name="SUBMARKET">
+<block type="variables_set" id="40a29ad18cfdc02d0efd">
+<field name="VAR">prediction</field>
+<value name="VALUE"><block type="math_number" id="b1efaea3011f56be6820"><field name="NUM">5</field></block></value>
+<next>
+<block type="variables_set" id="ba931b110d1f307971f2">
+<field name="VAR">stake</field>
+<value name="VALUE"><block type="math_number" id="59ad592eb36286d42dd4"><field name="NUM">1</field></block></value>
+<next>
+<block type="market" id="94e798a713c313bd23f9">
+<field name="MARKET_LIST">volidx</field>
+<field name="SUBMARKET_LIST">random_index</field>
+<field name="SYMBOL_LIST">R_10</field>
+<field name="TRADETYPECAT_LIST">digits</field>
+<field name="TRADETYPE_LIST">matchesdiffers</field>
+<field name="TYPE_LIST">both</field>
+<field name="CANDLEINTERVAL_LIST">60</field>
+<field name="DURATIONTYPE_LIST">t</field>
+<field name="PAYOUTTYPE_LIST">stake</field>
+<field name="CURRENCY_LIST">USD</field>
+<field name="RESTARTONERROR">FALSE</field>
+<value name="DURATION"><block type="math_number" id="2f3687ac0eb39afc02d3"><field name="NUM">1</field></block></value>
+<value name="AMOUNT"><block type="variables_get" id="434713ade22366c903c7"><field name="VAR">stake</field></block></value>
+<value name="PREDICTION"><block type="variables_get" id="aa9193ef1790915ff6b0"><field name="VAR">prediction</field></block></value>
+</block>
+</next>
+</block>
+</next>
+</block>
+</statement>
+</block>
+
+<block type="before_purchase" id="2da73c68586027e9062b" x="0" y="293">
+<statement name="BEFOREPURCHASE_STACK">
+<block type="controls_if" id="41aab8fb038f70f1843c">
+<mutation else="1"></mutation>
+<value name="IF0">
+<block type="logic_compare" id="83e890956bf7edbf2fe6">
+<field name="OP">EQ</field>
+<value name="A"><block type="variables_get" id="a316fd6a99c90b8d53e4"><field name="VAR">prediction</field></block></value>
+<value name="B"><block type="math_number" id="6c5a9db6e0f8930101de"><field name="NUM">5</field></block></value>
+</block>
+</value>
+<statement name="DO0"><block type="purchase" id="c4cb3526aef711ebef1a"><field name="PURCHASE_LIST">DIGITMATCH</field></block></statement>
+<statement name="ELSE"><block type="purchase" id="1b19b08672615e2423cc"><field name="PURCHASE_LIST">DIGITDIFF</field></block></statement>
+</block>
+</statement>
+</block>
+
+<block type="after_purchase" id="ac9bdd6d357c5f240daa" x="0" y="471">
+<statement name="AFTERPURCHASE_STACK">
+<block type="controls_if" id="dcf0c75a9dc58f4d3f2d">
+<mutation else="1"></mutation>
+<value name="IF0"><block type="contract_check_result" id="4c397773a0bab7fb6021"><field name="CHECK_RESULT">win</field></block></value>
+<statement name="DO0">
+<block type="variables_set" id="86cca1e19f1a19a79c0d">
+<field name="VAR">stake</field>
+<value name="VALUE"><block type="math_number" id="6a22faff1e7bfc23d738"><field name="NUM">1</field></block></value>
+</block>
+</statement>
+<statement name="ELSE">
+<block type="variables_set" id="cd5cfe8beeafbe816537">
+<field name="VAR">stake</field>
+<value name="VALUE">
+<block type="math_arithmetic" id="13bd579fc966a67281ab">
+<field name="OP">MULTIPLY</field>
+<value name="A"><block type="variables_get" id="5a92296a77180a03d58d"><field name="VAR">stake</field></block></value>
+<value name="B"><block type="math_number" id="de160adb3277fe40711a"><field name="NUM">6</field></block></value>
+</block>
+</value>
+</block>
+</statement>
+<next><block type="trade_again" id="31822e294f77e588c3bd"></block></next>
+</block>
+</statement>
+</block>
+</xml>
