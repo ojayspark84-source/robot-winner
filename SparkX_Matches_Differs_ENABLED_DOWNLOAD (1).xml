@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- SparkX Matches & Differs adaptive strategy: DIGITMATCH / DIGITDIFF -->
+<!-- SparkX Matches & Differs adaptive strategy.
+     Risk control: stops after 3 consecutive losses.
+     An 85% win rate cannot be guaranteed by a bot or by this setting. -->
 <xml xmlns="http://www.w3.org/1999/xhtml" collection="false">
   <variables>
     <variable type="" id="prediction">prediction</variable>
@@ -7,7 +9,10 @@
     <variable type="" id="baseStake">baseStake</variable>
     <variable type="" id="maxStake">maxStake</variable>
     <variable type="" id="lossStreak">lossStreak</variable>
+    <variable type="" id="maxLossStreak">maxLossStreak</variable>
     <variable type="" id="tradeCount">tradeCount</variable>
+    <variable type="" id="winCount">winCount</variable>
+    <variable type="" id="winRate">winRate</variable>
   </variables>
 
   <block type="trade" id="adaptive_trade_1" x="0" y="0">
@@ -32,25 +37,43 @@
                         <field name="VAR">lossStreak</field>
                         <value name="VALUE"><block type="math_number" id="loss_streak_value"><field name="NUM">0</field></block></value>
                         <next>
-                          <block type="variables_set" id="set_trade_count">
-                            <field name="VAR">tradeCount</field>
-                            <value name="VALUE"><block type="math_number" id="trade_count_value"><field name="NUM">0</field></block></value>
+                          <block type="variables_set" id="set_max_loss_streak">
+                            <field name="VAR">maxLossStreak</field>
+                            <value name="VALUE"><block type="math_number" id="max_loss_streak_value"><field name="NUM">3</field></block></value>
                             <next>
-                              <block type="market" id="market_setup">
-                                <field name="MARKET_LIST">volidx</field>
-                                <field name="SUBMARKET_LIST">random_index</field>
-                                <field name="SYMBOL_LIST">R_10</field>
-                                <field name="TRADETYPECAT_LIST">digits</field>
-                                <field name="TRADETYPE_LIST">matchesdiffers</field>
-                                <field name="TYPE_LIST">both</field>
-                                <field name="CANDLEINTERVAL_LIST">60</field>
-                                <field name="DURATIONTYPE_LIST">t</field>
-                                <field name="PAYOUTTYPE_LIST">stake</field>
-                                <field name="CURRENCY_LIST">USD</field>
-                                <field name="RESTARTONERROR">FALSE</field>
-                                <value name="DURATION"><block type="math_number" id="duration_value"><field name="NUM">1</field></block></value>
-                                <value name="AMOUNT"><block type="variables_get" id="amount_get"><field name="VAR">stake</field></block></value>
-                                <value name="PREDICTION"><block type="variables_get" id="prediction_get"><field name="VAR">prediction</field></block></value>
+                              <block type="variables_set" id="set_trade_count">
+                                <field name="VAR">tradeCount</field>
+                                <value name="VALUE"><block type="math_number" id="trade_count_value"><field name="NUM">0</field></block></value>
+                                <next>
+                                  <block type="variables_set" id="set_win_count">
+                                    <field name="VAR">winCount</field>
+                                    <value name="VALUE"><block type="math_number" id="win_count_value"><field name="NUM">0</field></block></value>
+                                    <next>
+                                      <block type="variables_set" id="set_win_rate">
+                                        <field name="VAR">winRate</field>
+                                        <value name="VALUE"><block type="math_number" id="win_rate_value"><field name="NUM">0</field></block></value>
+                                        <next>
+                                          <block type="market" id="market_setup">
+                                            <field name="MARKET_LIST">volidx</field>
+                                            <field name="SUBMARKET_LIST">random_index</field>
+                                            <field name="SYMBOL_LIST">R_10</field>
+                                            <field name="TRADETYPECAT_LIST">digits</field>
+                                            <field name="TRADETYPE_LIST">matchesdiffers</field>
+                                            <field name="TYPE_LIST">both</field>
+                                            <field name="CANDLEINTERVAL_LIST">60</field>
+                                            <field name="DURATIONTYPE_LIST">t</field>
+                                            <field name="PAYOUTTYPE_LIST">stake</field>
+                                            <field name="CURRENCY_LIST">USD</field>
+                                            <field name="RESTARTONERROR">FALSE</field>
+                                            <value name="DURATION"><block type="math_number" id="duration_value"><field name="NUM">1</field></block></value>
+                                            <value name="AMOUNT"><block type="variables_get" id="amount_get"><field name="VAR">stake</field></block></value>
+                                            <value name="PREDICTION"><block type="variables_get" id="prediction_get"><field name="VAR">prediction</field></block></value>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
                               </block>
                             </next>
                           </block>
@@ -121,12 +144,8 @@
                 <value name="B"><block type="math_number" id="pred_5_value"><field name="NUM">5</field></block></value>
               </block>
             </value>
-            <statement name="DO0">
-              <block type="purchase" id="buy_digit_match"><field name="PURCHASE_LIST">DIGITMATCH</field></block>
-            </statement>
-            <statement name="ELSE">
-              <block type="purchase" id="buy_digit_diff"><field name="PURCHASE_LIST">DIGITDIFF</field></block>
-            </statement>
+            <statement name="DO0"><block type="purchase" id="buy_digit_match"><field name="PURCHASE_LIST">DIGITMATCH</field></block></statement>
+            <statement name="ELSE"><block type="purchase" id="buy_digit_diff"><field name="PURCHASE_LIST">DIGITDIFF</field></block></statement>
           </block>
         </next>
       </block>
@@ -137,9 +156,7 @@
     <statement name="AFTERPURCHASE_STACK">
       <block type="controls_if" id="win_loss_logic">
         <mutation else="1"></mutation>
-        <value name="IF0">
-          <block type="contract_check_result" id="check_result_win"><field name="CHECK_RESULT">win</field></block>
-        </value>
+        <value name="IF0"><block type="contract_check_result" id="check_result_win"><field name="CHECK_RESULT">win</field></block></value>
         <statement name="DO0">
           <block type="variables_set" id="on_win_reset_stake">
             <field name="VAR">stake</field>
@@ -149,13 +166,15 @@
                 <field name="VAR">lossStreak</field>
                 <value name="VALUE"><block type="math_number" id="loss_streak_reset"><field name="NUM">0</field></block></value>
                 <next>
-                  <block type="variables_set" id="trade_count_plus_one_win">
-                    <field name="VAR">tradeCount</field>
-                    <value name="VALUE"><block type="math_arithmetic" id="increment_trade_count_win">
-                      <field name="OP">ADD</field>
-                      <value name="A"><block type="variables_get" id="trade_count_existing_win"><field name="VAR">tradeCount</field></block></value>
-                      <value name="B"><block type="math_number" id="trade_count_add_win"><field name="NUM">1</field></block></value>
-                    </block></value>
+                  <block type="variables_set" id="increment_win_count">
+                    <field name="VAR">winCount</field>
+                    <value name="VALUE"><block type="math_arithmetic" id="increment_wins"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="win_count_get"><field name="VAR">winCount</field></block></value><value name="B"><block type="math_number" id="win_add"><field name="NUM">1</field></block></value></block></value>
+                    <next>
+                      <block type="variables_set" id="increment_trade_count_win">
+                        <field name="VAR">tradeCount</field>
+                        <value name="VALUE"><block type="math_arithmetic" id="trade_count_win_add"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="trade_count_win_get"><field name="VAR">tradeCount</field></block></value><value name="B"><block type="math_number" id="trade_count_win_one"><field name="NUM">1</field></block></value></block></value>
+                      </block>
+                    </next>
                   </block>
                 </next>
               </block>
@@ -165,49 +184,20 @@
         <statement name="ELSE">
           <block type="variables_set" id="on_loss_increase_streak">
             <field name="VAR">lossStreak</field>
-            <value name="VALUE"><block type="math_arithmetic" id="increase_loss_streak">
-              <field name="OP">ADD</field>
-              <value name="A"><block type="variables_get" id="loss_streak_current"><field name="VAR">lossStreak</field></block></value>
-              <value name="B"><block type="math_number" id="loss_streak_increase"><field name="NUM">1</field></block></value>
-            </block></value>
+            <value name="VALUE"><block type="math_arithmetic" id="increase_loss_streak"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="loss_streak_current"><field name="VAR">lossStreak</field></block></value><value name="B"><block type="math_number" id="loss_streak_increase"><field name="NUM">1</field></block></value></block></value>
             <next>
-              <block type="variables_set" id="increase_stake_after_loss">
-                <field name="VAR">stake</field>
-                <value name="VALUE"><block type="math_arithmetic" id="double_stake_loss">
-                  <field name="OP">MULTIPLY</field>
-                  <value name="A"><block type="variables_get" id="stake_for_loss"><field name="VAR">stake</field></block></value>
-                  <value name="B"><block type="math_number" id="double_factor"><field name="NUM">2</field></block></value>
-                </block></value>
+              <block type="variables_set" id="increase_trade_count_loss">
+                <field name="VAR">tradeCount</field>
+                <value name="VALUE"><block type="math_arithmetic" id="trade_count_loss_add"><field name="OP">ADD</field><value name="A"><block type="variables_get" id="trade_count_loss_get"><field name="VAR">tradeCount</field></block></value><value name="B"><block type="math_number" id="trade_count_loss_one"><field name="NUM">1</field></block></value></block></value>
                 <next>
-                  <block type="controls_if" id="cap_stake_after_loss">
-                    <mutation else="1"></mutation>
-                    <value name="IF0">
-                      <block type="logic_compare" id="check_stake_gt_max">
-                        <field name="OP">GT</field>
-                        <value name="A"><block type="variables_get" id="stake_gt_max_var"><field name="VAR">stake</field></block></value>
-                        <value name="B"><block type="variables_get" id="max_stake_var"><field name="VAR">maxStake</field></block></value>
-                      </block>
-                    </value>
-                    <statement name="DO0">
-                      <block type="variables_set" id="cap_stake_value">
-                        <field name="VAR">stake</field>
-                        <value name="VALUE"><block type="variables_get" id="cap_stake_get"><field name="VAR">maxStake</field></block></value>
-                      </block>
-                    </statement>
-                    <statement name="ELSE">
-                      <block type="variables_set" id="keep_stake_value">
-                        <field name="VAR">stake</field>
-                        <value name="VALUE"><block type="variables_get" id="keep_stake_get"><field name="VAR">stake</field></block></value>
-                      </block>
-                    </statement>
+                  <block type="variables_set" id="increase_stake_after_loss">
+                    <field name="VAR">stake</field>
+                    <value name="VALUE"><block type="math_arithmetic" id="double_stake_loss"><field name="OP">MULTIPLY</field><value name="A"><block type="variables_get" id="stake_for_loss"><field name="VAR">stake</field></block></value><value name="B"><block type="math_number" id="double_factor"><field name="NUM">2</field></block></value></block></value>
                     <next>
-                      <block type="variables_set" id="trade_count_plus_one_loss">
-                        <field name="VAR">tradeCount</field>
-                        <value name="VALUE"><block type="math_arithmetic" id="increment_trade_count_loss">
-                          <field name="OP">ADD</field>
-                          <value name="A"><block type="variables_get" id="trade_count_existing_loss"><field name="VAR">tradeCount</field></block></value>
-                          <value name="B"><block type="math_number" id="trade_count_add_loss"><field name="NUM">1</field></block></value>
-                        </block></value>
+                      <block type="controls_if" id="cap_stake_after_loss">
+                        <mutation else="0"></mutation>
+                        <value name="IF0"><block type="logic_compare" id="check_stake_gt_max"><field name="OP">GT</field><value name="A"><block type="variables_get" id="stake_gt_max_var"><field name="VAR">stake</field></block></value><value name="B"><block type="variables_get" id="max_stake_var"><field name="VAR">maxStake</field></block></value></block></value>
+                        <statement name="DO0"><block type="variables_set" id="cap_stake_value"><field name="VAR">stake</field><value name="VALUE"><block type="variables_get" id="cap_stake_get"><field name="VAR">maxStake</field></block></value></block></statement>
                       </block>
                     </next>
                   </block>
@@ -217,7 +207,18 @@
           </block>
         </statement>
         <next>
-          <block type="trade_again" id="trade_again_after_result"></block>
+          <!-- Do not call trade_again after the third consecutive loss. -->
+          <block type="controls_if" id="trade_again_only_below_three_losses">
+            <mutation else="0"></mutation>
+            <value name="IF0">
+              <block type="logic_compare" id="loss_streak_below_max">
+                <field name="OP">LT</field>
+                <value name="A"><block type="variables_get" id="loss_streak_for_stop"><field name="VAR">lossStreak</field></block></value>
+                <value name="B"><block type="variables_get" id="max_loss_for_stop"><field name="VAR">maxLossStreak</field></block></value>
+              </block>
+            </value>
+            <statement name="DO0"><block type="trade_again" id="trade_again_after_result"></block></statement>
+          </block>
         </next>
       </block>
     </statement>
